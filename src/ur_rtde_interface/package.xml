@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>ur_rtde_interface</name>
+  <version>0.0.0</version>
+  <description>UR RTDE ROS2 Python Interface</description>
+  <maintainer email="pippo.castoro@nonlibero.it">lar</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <build_depend>rclpy</build_depend>
+  <exec_depend>rclpy</exec_depend>
+
+  <depend>ur_rtde_srv</depend>
+
+  <export>
+    <build_type>ament_python</build_type>
+    <ros2launch/>
+  </export>
+</package>

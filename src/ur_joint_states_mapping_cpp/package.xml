@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>ur_joint_states_mapping_cpp</name>
+  <version>0.0.1</version>
+  <description>Split /joint_states into left/right UR arms (C++).</description>
+
+  <maintainer email="you@example.com">Alessio</maintainer>
+  <license>Apache-2.0</license>
+
+  <!-- ROS2 build system -->
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <!-- Runtime deps -->
+  <depend>rclcpp</depend>
+  <depend>sensor_msgs</depend>
+
+  <export>
+    <!-- IMPORTANT: make it an ament_cmake package -->
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

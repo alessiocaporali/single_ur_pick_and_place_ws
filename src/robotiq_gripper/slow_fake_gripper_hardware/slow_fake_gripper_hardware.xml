@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<library path="slow_fake_gripper_hardware">
+  <class
+    name="slow_fake_gripper_hardware/SlowFakeSystem"
+    type="slow_fake_gripper_hardware::SlowFakeSystem"
+    base_class_type="hardware_interface::SystemInterface">
+    <description>Rate-limited fake ros2_control system (position commands).</description>
+  </class>
+</library>

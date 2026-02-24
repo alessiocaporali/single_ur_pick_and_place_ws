@@ -1,0 +1,6 @@
+geometry_msgs/Pose  target_pose
+string              frame_name
+float64             speed
+float64             acceleration
+---
+bool success

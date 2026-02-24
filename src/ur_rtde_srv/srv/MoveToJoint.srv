@@ -1,0 +1,5 @@
+float64[]           joint_angles
+float64             speed
+float64             acceleration
+---
+bool success

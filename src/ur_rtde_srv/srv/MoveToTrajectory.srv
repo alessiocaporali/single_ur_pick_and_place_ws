@@ -1,0 +1,5 @@
+geometry_msgs/Pose[]  list_poses
+string              frame_name
+float64             speed_scale
+---
+bool success
