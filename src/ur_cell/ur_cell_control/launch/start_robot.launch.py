@@ -23,9 +23,14 @@ def generate_launch_description():
     launch_gripper_controller = LaunchConfiguration("launch_gripper_controller")
     gripper_spawn = LaunchConfiguration("gripper_spawn")
     use_mock_hardware = LaunchConfiguration("use_mock_hardware")
+    use_sim_gripper = LaunchConfiguration("use_sim_gripper")
     mock_sensor_commands = LaunchConfiguration("mock_sensor_commands")
     headless_mode = LaunchConfiguration("headless_mode")
     launch_dashboard_client = LaunchConfiguration("launch_dashboard_client")
+    use_tool_communication = LaunchConfiguration("use_tool_communication")
+    tool_device_name = LaunchConfiguration("tool_device_name")
+    tool_tcp_port = LaunchConfiguration("tool_tcp_port")
+    tty_port = LaunchConfiguration("tty_port")
     declared_arguments = []
     declared_arguments.append(
         DeclareLaunchArgument(
@@ -84,6 +89,13 @@ def generate_launch_description():
     )
     declared_arguments.append(
         DeclareLaunchArgument(
+            "use_sim_gripper",
+            default_value="false",
+            description="Launch gripper with simulated hardware.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
             "use_mock_hardware",
             default_value="false",
             description="Use mock hardware for UR driver (disables controller_stopper).",
@@ -108,6 +120,34 @@ def generate_launch_description():
             "launch_dashboard_client",
             default_value="false",
             description="Disable dashboard client in mock mode.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "use_tool_communication",
+            default_value="false",
+            description="Enable UR tool communication bridge.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "tool_device_name",
+            default_value="/tmp/ttyUR",
+            description="Pseudo-tty created by UR tool communication node.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "tool_tcp_port",
+            default_value="54321",
+            description="TCP port used by UR tool communication bridge.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "tty_port",
+            default_value="/tmp/ttyUR",
+            description="Serial port for real gripper RTU communication.",
         )
     )
 
@@ -147,9 +187,14 @@ def generate_launch_description():
                     ),
                     "controllers_file": controllers_file,
                     "use_mock_hardware": use_mock_hardware,
+                    "use_mock_gripper_hardware": use_sim_gripper,
                     "mock_sensor_commands": mock_sensor_commands,
                     "headless_mode": headless_mode,
                     "launch_dashboard_client": launch_dashboard_client,
+                    "use_tool_communication": use_tool_communication,
+                    "tool_device_name": tool_device_name,
+                    "tool_tcp_port": tool_tcp_port,
+                    "tty_port": tty_port,
                 }.items(),
             ),
             TimerAction(

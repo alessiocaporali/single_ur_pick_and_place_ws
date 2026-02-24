@@ -43,7 +43,15 @@ docker compose -f docker_compose_sim.yml up
 
 **UR robot state + rtde interface + robotiq gripper:**
 ```bash
-ros2 launch ur_rtde_interface robot.launch.py
+
+# real gripper over USB
+ros2 launch ur_cell_control start_robot.launch.py use_sim_gripper:=false tty_port:=/dev/ttyUSB0
+
+# real gripper over URCaps interface (#TODO: check)
+ros2 launch ur_cell_control start_robot.launch.py use_sim_gripper:=false tty_port:=/tmp/ttyUR use_tool_communication:=true
+
+# fake gripper (for simulation)
+ros2 launch ur_cell_control start_robot.launch.py use_sim_gripper:=true
 
 # only robot without gripper
 ros2 launch ur_cell_control start_robot.launch.py gripper_spawn:=false
@@ -64,3 +72,12 @@ the `gripper_action_controller` parameters are loaded from:
 src/ur_cell/ur_cell_control/config/ros2_controllers.yaml
 ```
 
+Launch only the gripper:
+
+```bash
+# real gripper over USB
+ros2 launch ur_cell_control start_gripper.launch.py use_sim_gripper:=false tty_port:=/dev/ttyUSB0
+
+# sim gripper
+ros2 launch ur_cell_control start_gripper.launch.py use_sim_gripper:=true
+```

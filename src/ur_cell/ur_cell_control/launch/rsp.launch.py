@@ -47,6 +47,7 @@ def generate_launch_description():
     ur_type = LaunchConfiguration("ur_type")
     robot_ip = LaunchConfiguration("robot_ip")
     gripper_spawn = LaunchConfiguration("gripper_spawn")
+    tty_port = LaunchConfiguration("tty_port")
 
     use_mock_hardware = LaunchConfiguration("use_mock_hardware")
     use_mock_gripper_hardware = LaunchConfiguration("use_mock_gripper_hardware")
@@ -92,6 +93,9 @@ def generate_launch_description():
             " ",
             "gripper_spawn:=",
             gripper_spawn,
+            " ",
+            "tty_port:=",
+            tty_port,
         ]
     )
     robot_description = {
@@ -165,6 +169,13 @@ def generate_launch_description():
             "gripper_spawn",
             default_value="true",
             description="Include Hand-E gripper links/joints in robot_description.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "tty_port",
+            default_value="/tmp/ttyUR",
+            description="Serial port for real gripper RTU communication.",
         )
     )
     declared_arguments.append(

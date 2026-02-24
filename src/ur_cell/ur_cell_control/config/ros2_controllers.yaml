@@ -22,7 +22,7 @@ controller_manager:
       type: position_controllers/JointGroupPositionController
 
     gripper_action_controller:
-      type: parallel_gripper_action_controller/GripperActionController
+      type: position_controllers/GripperActionController
 
 
 speed_scaling_state_broadcaster:

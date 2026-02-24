@@ -19,10 +19,13 @@ rosidl_generate_interfaces(${PROJECT_NAME}
 
 ament_export_dependencies(rosidl_default_runtime)
 
-install(
+# only install launch/ if it exists
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/launch")
+  install(
     DIRECTORY launch
     DESTINATION share/${PROJECT_NAME}/
-)
+  )
+endif()
 
 install(
     DIRECTORY resource

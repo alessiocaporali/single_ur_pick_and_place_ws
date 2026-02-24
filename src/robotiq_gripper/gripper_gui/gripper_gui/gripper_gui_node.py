@@ -7,7 +7,7 @@ import rclpy
 from rclpy.node import Node
 from rclpy.action import ActionClient
 
-from control_msgs.action import ParallelGripperCommand
+from control_msgs.action import GripperCommand
 
 from PyQt5 import QtCore, QtWidgets
 
@@ -26,7 +26,7 @@ class GripperActionNode(Node):
     def __init__(self, cfg: GripperConfig):
         super().__init__("gripper_gui")
         self.cfg = cfg
-        self._client = ActionClient(self, ParallelGripperCommand, cfg.action_name)
+        self._client = ActionClient(self, GripperCommand, cfg.action_name)
         self._lock = threading.Lock()
         self._busy = False
 
@@ -49,8 +49,8 @@ class GripperActionNode(Node):
         pos = float(position)
         pos = max(self.cfg.pos_min, min(self.cfg.pos_max, pos))
 
-        goal = ParallelGripperCommand.Goal()
-        goal.command.position = [pos] * int(self.cfg.n_joints)
+        goal = GripperCommand.Goal()
+        goal.command.position = pos
 
         self._set_busy(True)
 
