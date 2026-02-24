@@ -12,7 +12,7 @@ import osg
 import agxROS2
 
 from pipy.tf import Rotation, Vector, Frame
-
+from termcolor import cprint
 
 class Joint():
     def __init__(self,
@@ -31,6 +31,26 @@ class Joint():
 
     def get_speed(self) -> float:
         return self.hinge.getCurrentSpeed()
+
+
+class PrismaticJoint:
+    def __init__(self, name: str, prismatic: agx.Prismatic):
+        self.name = name
+        self.prismatic = prismatic
+        self.parent = prismatic.getBodyAt(1)
+        self.child  = prismatic.getBodyAt(0)
+
+        self.motor = prismatic.getMotor1D()
+        self.motor.setForceRange(agx.RangeReal(-np.inf, np.inf))
+
+        self.lock = prismatic.getLock1D()
+
+    def get_pos(self) -> float:
+        # displacement along axis (meters)
+        return self.prismatic.getAngle()
+
+    def get_speed(self) -> float:
+        return self.prismatic.getCurrentSpeed()
 
 
 class UrRobot():
@@ -81,13 +101,14 @@ class UrRobot():
         sim.add(assembly)
         self.assembly = assembly
 
-        # setup constraints in the panda assembly
+        # setup constraints
         all_c = list(assembly.getConstraints())
+
         # set the damping time just in case the time step has changed
         [c.setDamping(2 * sim.getTimeStep()) for c in all_c]
 
         self.joints = [Joint(c.getName(), c.asHinge()) for c in all_c if c.asHinge()]
-        self.prismatics = [c.asPrismatic() for c in all_c if c.asPrismatic()]
+        self.prismatics = [PrismaticJoint(c.getName(), c.asPrismatic()) for c in all_c if c.asPrismatic()]
         self.locks = [c.asLockJoint() for c in all_c if c.asLockJoint()]
 
         ##########################
@@ -99,7 +120,19 @@ class UrRobot():
             else:
                 raise ValueError(f"Link '{name}' not found in the UR robot assembly.")
 
+        cprint(f"Links found: {len(self.links)}", "yellow")
+        for l in self.link_names:
+            print(l)
 
+        cprint(f"Joints found: {len(self.joints)}", "yellow")
+        for j in self.joints:
+            print(j.name)
+
+        cprint(f"Prismatics found: {len(self.prismatics)}", "yellow")
+        for j in self.prismatics:
+            print(j.name)
+
+        print("\n")
         #############################
 
         self.chain = agxModel.SerialKinematicChain(sim, self.base, self.ee)
@@ -117,6 +150,18 @@ class UrRobot():
     @property
     def node(self):
         return self.m_visual_node
+    
+
+    def set_prismatic_positions(self, x: Iterable[float]) -> None:
+        for pj, xi in zip(self.prismatics, x):
+            pj.lock.setEnable(True)      # ensure lock active
+            pj.lock.setPosition(xi)      # meters
+
+    def get_prismatic_positions(self) -> np.ndarray:
+        return np.array([j.get_pos() for j in self.prismatics])
+
+    def get_prismatic_velocities(self) -> np.ndarray:
+        return np.array([j.get_speed() for j in self.prismatics])
 
     def enable_motors(self, enable: bool) -> None:
         [j.motor.setEnable(enable) for j in self.joints]
@@ -198,6 +243,7 @@ class UrRobotRos2Mapping(agxSDK.StepEventListener):
 
         # Order coming from ROS
         self.ros_joint_order = [
+            "gripper_robotiq_hande_left_finger_joint",
             f"{prefix}_elbow_joint",
             f"{prefix}_shoulder_lift_joint",
             f"{prefix}_shoulder_pan_joint",
@@ -213,8 +259,11 @@ class UrRobotRos2Mapping(agxSDK.StepEventListener):
             f"{prefix}_elbow_joint",
             f"{prefix}_wrist_1_joint",
             f"{prefix}_wrist_2_joint",
-            f"{prefix}_wrist_3_joint"
+            f"{prefix}_wrist_3_joint",
         ]
+
+        self.agx_gripper_joint = "gripper_robotiq_hande_left_finger_joint"
+        self.agx_gripper_joint_idx = self.ros_joint_order.index(self.agx_gripper_joint)
 
         # Build index map AGX index → ROS index
         self.joint_index_map = {
@@ -231,11 +280,31 @@ class UrRobotRos2Mapping(agxSDK.StepEventListener):
             motor = joint.getMotor1D()
             self.agx_motors.append(motor)
 
+        self.agx_gripper_motors = []
+        gripper_joint = self.robot.assembly.getConstraint1DOF(self.agx_gripper_joint)
+        if gripper_joint:
+            m = gripper_joint.getMotor1D()
+            m.setEnable(True)
+            m.setForceRange(agx.RangeReal(-1e6, 1e6))  # or bigger if needed
+            self.agx_gripper_motors.append(m)
+
+            
         # Initialize desired positions (avoid None checks later)
         self.q_desired = [0.0] * self.NUM_JOINTS
 
         print("[Ros2] Joint mapping:", self.joint_index_map)
         print("[Ros2] Using PD position control (Kp=%.2f, Kd=%.2f)" % (kp, kd))
+    
+        pj = self.robot.prismatics[0]
+
+        pj.lock.setEnable(False)                    # don’t fight the motor
+        pj.motor.setEnable(True)
+        pj.motor.setForceRange(agx.RangeReal(-1e6, 1e6))  # strong enough
+        pj.motor.setSpeed(0.0)    
+
+        print("pos:", pj.get_pos(), "vel:", pj.get_speed(),
+            "motor_en:", pj.motor.getEnable(),
+            "lock_en:", pj.lock.getEnable())
 
     # ----------------------------------------------------------------------
 
@@ -282,6 +351,20 @@ class UrRobotRos2Mapping(agxSDK.StepEventListener):
 
             # Apply to AGX motor
             self.agx_motors[i].setSpeed(vel_cmd)
+
+        #############################
+        # GRIPPER
+        q_gripper_current = self.robot.get_prismatic_positions()
+        qdot_gripper_current = self.robot.get_prismatic_velocities()
+        q_gripper_desired = self.msg_joint_state.position[self.agx_gripper_joint_idx]
+        qdot_gripper_desired = self.msg_joint_state.velocity[self.agx_gripper_joint_idx]
+
+        error = q_gripper_desired - q_gripper_current[0]
+        derror = qdot_gripper_desired - qdot_gripper_current[0]
+
+        gripper_vel_cmd = self.kp * error + self.kd * derror
+        #print("[Ros2] gripper:", q_gripper_desired, q_gripper_current[0], error, gripper_vel_cmd)
+        self.robot.prismatics[0].motor.setSpeed(gripper_vel_cmd)
 
         # Debug print once per second
         if time % 1.0 < 0.01 and self.debug:
