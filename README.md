@@ -42,62 +42,16 @@ docker compose -f docker_compose_sim.yml up
 
 ### Start Robot and RTDE Control Interface
 ```bash
-# robot
-ros2 launch ur_cell_control start_robot.launch.py robot_ip:=172.25.0.2
 
-# RTDE controller interface (gripper active to expose action server for the gripper)
-ros2 launch ur_rtde_interface controller.launch.py robot_ip:=172.25.0.2 gripper_active:=true
+# spawn robot and gripper
+ros2 launch ur_cell_control start_robot.launch.py ur_type:=ur5e use_mock_gripper_hardware:=false  gripper_spawn:=true tty_port:=/dev/ttyUSB0
 
-```
-
-## Start Gripper
-```bash
-# robot
-ros2 launch ur_cell_control start_gripper.launch.py use_sim_gripper:=true
-
-# RTDE controller interface
+# RTDE controller interface for robot
 ros2 launch ur_rtde_interface controller.launch.py robot_ip:=172.25.0.2
 
 ```
 
-**UR robot state + rtde interface + robotiq gripper:**
-```bash
-
-# no gripper (UR robot only)
-ros2 launch ur_rtde_interface robot.launch.py gripper_mode:=false
-
-# real gripper over USB Modbus
-ros2 launch ur_rtde_interface robot.launch.py gripper_mode:=modbus tty_port:=/dev/ttyUSB0
-
-# gripper over UR RTDE socket service (model in RViz, no gripper controller spawn, no Modbus connection)
-ros2 launch ur_rtde_interface robot.launch.py gripper_mode:=rtde
-
-# fake gripper (simulation)
-ros2 launch ur_rtde_interface robot.launch.py gripper_mode:=simulation
-
-```
-
-## Gripper controller parameters
-
-When launching with:
-
-```bash
-ros2 launch ur_rtde_interface robot.launch.py
-```
-
-the `gripper_action_controller` parameters are loaded from:
-
-```bash
-src/ur_cell/ur_cell_control/config/ros2_controllers.yaml
-```
-
-To expose the RTDE gripper service (`/<namespace>/move_gripper`) through the UR robot socket, enable:
-
-```bash
-ros2 launch ur_rtde_interface robot.launch.py gripper_mode:=rtde
-```
-
-# Launch only the gripper:
+# Start Gripper 
 
 in case of problems check grant permission with
 ```bash
@@ -107,7 +61,3 @@ sudo chmod 777 /dev/ttyUSB0
 ```bash
 # real gripper over USB
 ros2 launch robotiq_hande_driver gripper.launch.py tty_port:=/dev/ttyUSB0 use_fake_hardware:=false
-
-# sim gripper
-ros2 launch ur_cell_control start_gripper.launch.py use_sim_gripper:=true
-```
