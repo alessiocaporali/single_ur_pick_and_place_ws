@@ -9,7 +9,6 @@ This repository contains a ROS 2 workspace for Universal Robots (UR) simulation 
   - `ur_cell/ur_cell_description`
   - `ur_rtde_interface` (UR RTDE interface for controlling UR robots)
   - `ur_rtde_srv` (UR RTDE service definitions)
-  - `ur_joint_states_mapping_cpp` (Mapping joint states to different namespaces)
 - **Docker compose:** `docker_compose_sim.yml` (for running simulators/URSims)
 
 

@@ -100,15 +100,8 @@ def generate_launch_description():
         }.items(),
     )
 
-    mapping_node = Node(
-        package="ur_joint_states_mapping_cpp",
-        executable="mapping",
-        name="ur_joint_states_mapping_node",
-        output="screen",
-    )
-
     return LaunchDescription(
         declared_arguments
         + debug_argument_logs
-        + [start_robots_launch, rtde_controllers_launch, mapping_node]
+        + [start_robots_launch, rtde_controllers_launch]
     )
