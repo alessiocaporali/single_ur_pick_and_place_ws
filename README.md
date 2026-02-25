@@ -40,6 +40,26 @@ Notes:
 docker compose -f docker_compose_sim.yml up
 ```
 
+### Start Robot and RTDE Control Interface
+```bash
+# robot
+ros2 launch ur_cell_control start_robot.launch.py robot_ip:=172.25.0.2
+
+# RTDE controller interface (gripper active to expose action server for the gripper)
+ros2 launch ur_rtde_interface controller.launch.py robot_ip:=172.25.0.2 gripper_active:=true
+
+```
+
+## Start Gripper
+```bash
+# robot
+ros2 launch ur_cell_control start_gripper.launch.py use_sim_gripper:=true
+
+# RTDE controller interface
+ros2 launch ur_rtde_interface controller.launch.py robot_ip:=172.25.0.2
+
+```
+
 **UR robot state + rtde interface + robotiq gripper:**
 ```bash
 
@@ -77,11 +97,16 @@ To expose the RTDE gripper service (`/<namespace>/move_gripper`) through the UR 
 ros2 launch ur_rtde_interface robot.launch.py gripper_mode:=rtde
 ```
 
-Launch only the gripper:
+# Launch only the gripper:
+
+in case of problems check grant permission with
+```bash
+sudo chmod 777 /dev/ttyUSB0 
+```
 
 ```bash
 # real gripper over USB
-ros2 launch ur_cell_control start_gripper.launch.py use_sim_gripper:=false tty_port:=/dev/ttyUSB0
+ros2 launch robotiq_hande_driver gripper.launch.py tty_port:=/dev/ttyUSB0 use_fake_hardware:=false
 
 # sim gripper
 ros2 launch ur_cell_control start_gripper.launch.py use_sim_gripper:=true

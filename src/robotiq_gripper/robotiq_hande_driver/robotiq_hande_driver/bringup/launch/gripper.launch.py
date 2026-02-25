@@ -23,7 +23,7 @@ def generate_launch_description():
     declared_arguments.append(
         DeclareLaunchArgument(
             "launch_rviz",
-            default_value="true",
+            default_value="false",
             description="Launch RViz for the gripper visualization.",
         )
     )
@@ -147,6 +147,7 @@ def prepare_robot_state_publisher_node() -> Node:
     create_socat_tty = LaunchConfiguration("create_socat_tty")
     socat_ip_address = LaunchConfiguration("socat_ip_address")
     socat_port = LaunchConfiguration("socat_port")
+    
 
     robot_description_str = Command(
         [

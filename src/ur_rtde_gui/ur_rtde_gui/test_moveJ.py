@@ -12,6 +12,7 @@ class Tester(Node):
         super().__init__("tester")
         base = namespace.rstrip("/")
         srv_name = f"{base}/move_to_joint"
+        self.get_logger().info(f"Creating client for service: {srv_name}")
         self.cli = self.create_client(MoveToJoint, srv_name)
 
         while not self.cli.wait_for_service(timeout_sec=1.0):
@@ -19,7 +20,8 @@ class Tester(Node):
 
     def call_service(self):
         req = MoveToJoint.Request()
-        req.joint_angles = [-1.72, -1.42, -1.9, -1.35, 1.55, 0.0]
+        req.joint_angles = [1.5, -1.42, -1.9, -1.35, 1.55, 0.0]
+        self.get_logger().info(f"Requesting MoveToJoint with joint angles: {req.joint_angles}")
 
         self.get_logger().info("Calling MoveToJoint service...")
         future = self.cli.call_async(req)

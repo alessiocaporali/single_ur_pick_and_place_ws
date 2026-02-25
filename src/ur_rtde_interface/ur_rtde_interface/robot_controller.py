@@ -83,7 +83,7 @@ def frame_from_pose(pose):
 # -----------------------------
 class RobotController(Node):
     def __init__(self):
-        super().__init__("robot_controller")
+        super().__init__("robot_controller_ur_interface")
 
         # Parameters
         self.declare_parameter("robot_ip", "172.17.0.2")
@@ -101,7 +101,11 @@ class RobotController(Node):
         self.stop_flag = False
 
         # Robot driver
+        self.get_logger().info(f"Connecting to UR robot at IP: {robot_ip} with gripper_active: {self.gripper_active}")
         self.robot = UR(robot_ip, gripper=self.gripper_active)
+        self.get_logger().info(f"Connected to UR robot at IP: {robot_ip}")
+
+
         self.gripper_range = [0.0, 0.055]
         if self.gripper_active and self.robot.gripper is not None:
             self.gripper_range = [
@@ -144,11 +148,13 @@ class RobotController(Node):
         self.traj_idx = 0
         self.execute_traj = False
 
+        self.get_logger().info(f"Robot Controller initialized with IP: {robot_ip}, namespace: {ns}, gripper_active: {self.gripper_active}")
+
         # Threads
         threading.Thread(target=self.robot_state_loop, daemon=True).start()
         threading.Thread(target=self.main_loop, daemon=True).start()
 
-        self.get_logger().info("Robot Controller Node Initialized")
+        self.get_logger().info("[UR Single] Robot Controller Node Initialized")
 
     # -----------------------------
     # Callbacks
@@ -184,6 +190,9 @@ class RobotController(Node):
         return MoveGripper.Response(success=True)
 
     def movetojoint_callback(self, req, resp=None):
+        print("MoveToJoint callback hit", flush=True)
+
+        self.get_logger().info(f"Received MoveToJoint request with joint angles: {req.joint_angles}")
         speed = req.speed or self.default_speed
         acc = req.acceleration or self.default_acceleration
         self.robot.move_to_joint(req.joint_angles, speed=speed, acceleration=acc)

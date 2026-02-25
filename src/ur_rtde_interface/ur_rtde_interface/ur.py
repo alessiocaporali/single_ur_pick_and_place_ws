@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import numpy as np
 import sys
 import time
@@ -9,14 +11,14 @@ from ur_rtde_interface.robotiq import GripperControl
 
 class UR:
 
-    def __init__(self, robot_ip, home_joints=None, only_receiver=False, gripper=True):
+    def __init__(self, robot_ip, home_joints=None, only_receiver=False, gripper=False):
         """
         robot_ip: str - IP address of the robot
         camera_tool0_pose: list - [x, y, z, qx, qy, qz, qw] pose of the camera in the tool0 frame
         home_joints: list - [j1, j2, j3, j4, j5, j6] joint values for the home position
         """
 
-        self.home_joints = home_joints
+        self.home_joints =  [-1.72, -1.42, -1.9, -1.35, 1.55, 0.0] if home_joints is None else home_joints
 
         self.speed = 0.1
         self.acceleration = 0.5
@@ -25,10 +27,11 @@ class UR:
         self.servo_lookahead_time = 0.1
         self.servo_gain = 300
 
+        print(f"dentrooo")
         self.rtde_r = RTDEReceiveInterface(robot_ip)
         if not only_receiver:
             self.rtde_c = RTDEControlInterface(robot_ip)
-
+        print(f"Connectedsssssssssssss")
         self.pin_tool0_frame = Frame(Rotation(), Vector(0, 0, 0.2278))
         self.pin_tool0_frame_original = Frame(Rotation(), Vector(0, 0, 0.2278))
 
@@ -42,9 +45,12 @@ class UR:
             self.move_gripper(position=0.02, speed=100, force=100)
             print("Gripper initialized successfully")
         else:
+            print("Gripper not enabled")
             self.gripper = None
         
     def homing(self):
+        print("Homing the robot...")
+        print("Moving to home position: ", self.home_joints)
         self.rtde_c.moveJ(self.home_joints, 0.1, 0.1, False)
 
     def get_joint_positions(self):

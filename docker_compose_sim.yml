@@ -1,16 +1,16 @@
 networks:
-  ur_network:
+  ur_single_network:
     driver: bridge
     ipam:
       config:
         - subnet: 172.25.0.0/16
 
 services:
-  ursim1:
+  ursim:
     image: universalrobots/ursim_e-series
-    container_name: ursim1
+    container_name: ursim
     networks:
-      ur_network:
+      ur_single_network:
         ipv4_address: 172.25.0.2
     ports:
       - "5900:5900"   # VNC

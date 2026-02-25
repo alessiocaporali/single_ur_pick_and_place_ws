@@ -10,7 +10,6 @@ setup(
         ("share/ament_index/resource_index/packages", ["resource/" + package_name]),
         ("share/" + package_name, ["package.xml"]),
         ("share/" + package_name + "/launch", ["launch/controller.launch.py"]),
-        ("share/" + package_name + "/launch", ["launch/robot.launch.py"]),
             ],
     install_requires=["setuptools"],
     zip_safe=True,
@@ -21,14 +20,7 @@ setup(
     entry_points={
         "console_scripts": [
             "robot_controller = ur_rtde_interface.robot_controller:main",
-            "gui_traj_control = ur_rtde_interface.gui_traj_control:main",
-            "test_gripper = ur_rtde_interface.test.test_gripper:main",
-            "test_gripper_action = ur_rtde_interface.test.test_gripper_action:main",
-            "test_moveJ = ur_rtde_interface.test.test_moveJ:main",
-            "test_speedl = ur_rtde_interface.test.test_speedl:main",
-            "test_target = ur_rtde_interface.test.test_target:main",
-            "test_traj = ur_rtde_interface.test.test_traj:main",
-            "test_joint_states = ur_rtde_interface.test.test_joint_states:main",
+          
         ],
     },
 )
