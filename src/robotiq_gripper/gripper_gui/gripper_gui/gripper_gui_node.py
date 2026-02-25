@@ -2,6 +2,7 @@
 import sys
 import threading
 from dataclasses import dataclass
+import signal
 
 import rclpy
 from rclpy.node import Node
@@ -228,15 +229,43 @@ def main():
     win = GripperWindow(node, cfg)
     win.show()
 
-    spin_thread = threading.Thread(target=rclpy.spin, args=(node,), daemon=True)
+    # Start rclpy spinning in a joinable thread (not daemon)
+    spin_thread = threading.Thread(target=rclpy.spin, args=(node,), daemon=False)
     spin_thread.start()
 
-    rc = app.exec_()
+    # When the Qt app is quitting, cleanly shutdown rclpy and wait for the spin thread
+    def _cleanup():
+        # First request rclpy to shutdown so rclpy.spin returns
+        try:
+            rclpy.shutdown()
+        except Exception:
+            pass
+        # wait briefly for spin thread to exit
+        if spin_thread.is_alive():
+            spin_thread.join(timeout=2.0)
+        # finally destroy the node (only once spin has stopped)
+        try:
+            node.destroy_node()
+        except Exception:
+            pass
 
-    node.destroy_node()
-    rclpy.shutdown()
+    # Connect Qt's aboutToQuit signal to cleanup
+    app.aboutToQuit.connect(_cleanup)
+
+    # Make Ctrl-C (SIGINT) trigger app.quit() which will emit aboutToQuit -> cleanup
+    signal.signal(signal.SIGINT, lambda sig, frame: app.quit())
+
+    try:
+        rc = app.exec_()
+    except KeyboardInterrupt:
+        # fallback: if something else catches the SIGINT, force cleanup
+        _cleanup()
+        rc = 0
+
+    # Ensure cleanup ran (in case exec_ returned without aboutToQuit firing)
+    _cleanup()
+
     sys.exit(rc)
-
 
 if __name__ == "__main__":
     main()
