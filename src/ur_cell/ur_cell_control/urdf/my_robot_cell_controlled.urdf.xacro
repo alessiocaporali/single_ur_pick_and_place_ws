@@ -23,6 +23,7 @@
   <xacro:arg name="mock_sensor_commands" default="false" />
   <xacro:arg name="use_mock_gripper_hardware" default="true" />
   <xacro:arg name="gripper_spawn" default="true" />
+  <xacro:arg name="tty_port" default="/tmp/ttyUR" />
 
   <link name="world" />
 

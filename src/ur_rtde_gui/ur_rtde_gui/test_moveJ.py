@@ -20,7 +20,7 @@ class Tester(Node):
 
     def call_service(self):
         req = MoveToJoint.Request()
-        req.joint_angles = [1.5, -1.42, -1.9, -1.35, 1.55, 0.0]
+        req.joint_angles = [1.8, -1.42, -1.9, -1.35, 1.55, 0.0]
         self.get_logger().info(f"Requesting MoveToJoint with joint angles: {req.joint_angles}")
 
         self.get_logger().info("Calling MoveToJoint service...")

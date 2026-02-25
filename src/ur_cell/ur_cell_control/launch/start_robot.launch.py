@@ -1,5 +1,5 @@
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction
 from launch.conditions import IfCondition, UnlessCondition
 from launch.launch_description_sources import AnyLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
@@ -23,6 +23,9 @@ def launch_setup():
 
     # Robot specific arguments
     use_mock_hardware = LaunchConfiguration("use_mock_hardware")
+    use_mock_gripper_hardware = LaunchConfiguration("use_mock_gripper_hardware")
+    gripper_spawn = LaunchConfiguration("gripper_spawn")
+    tty_port = LaunchConfiguration("tty_port")
     initial_joint_controller = LaunchConfiguration("initial_joint_controller")
     activate_joint_controller = LaunchConfiguration("activate_joint_controller")
     launch_dashboard_client = LaunchConfiguration("launch_dashboard_client")
@@ -74,7 +77,7 @@ def launch_setup():
         condition=UnlessCondition(use_mock_hardware),
         parameters=[
             {"headless_mode": headless_mode},
-            {"joint_controller_active": initial_joint_controller},
+            {"joint_controller_active": activate_joint_controller},
             {
                 "consistent_controllers": [
                     "joint_state_broadcaster",
@@ -161,7 +164,29 @@ def launch_setup():
         launch_arguments={
             "robot_ip": robot_ip,
             "ur_type": ur_type,
+            "use_mock_hardware": use_mock_hardware,
+            "use_mock_gripper_hardware": use_mock_gripper_hardware,
+            "gripper_spawn": gripper_spawn,
+            "tty_port": tty_port,
         }.items(),
+    )
+
+    gripper_action_controller = TimerAction(
+        period=3.0,
+        actions=[
+            Node(
+                package="controller_manager",
+                executable="spawner",
+                arguments=[
+                    "gripper_action_controller",
+                    "--controller-manager",
+                    "/controller_manager",
+                    "--controller-manager-timeout",
+                    controller_spawner_timeout,
+                ],
+                condition=IfCondition(gripper_spawn),
+            )
+        ],
     )
 
     nodes_to_start = [
@@ -170,6 +195,7 @@ def launch_setup():
         controller_stopper_node,
         urscript_interface,
         rsp,
+        gripper_action_controller,
         rviz_node,
         initial_joint_controller_spawner_stopped,
         initial_joint_controller_spawner_started,
@@ -242,6 +268,27 @@ def generate_launch_description():
             "use_mock_hardware",
             default_value="false",
             description="Start robot with mock hardware mirroring command to its states.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "use_mock_gripper_hardware",
+            default_value="true",
+            description="Use fake gripper hardware. Set false for real Hand-E via serial.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "gripper_spawn",
+            default_value="true",
+            description="Include Hand-E gripper and spawn gripper_action_controller.",
+        )
+    )
+    declared_arguments.append(
+        DeclareLaunchArgument(
+            "tty_port",
+            default_value="/tmp/ttyUR",
+            description="Serial port for the real Hand-E gripper (e.g. /dev/ttyUSB0).",
         )
     )
   
