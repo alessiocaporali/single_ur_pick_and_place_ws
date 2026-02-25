@@ -46,8 +46,11 @@ docker compose -f docker_compose_sim.yml up
 # spawn robot and gripper
 ros2 launch ur_cell_control start_robot.launch.py ur_type:=ur5e use_mock_gripper_hardware:=false  gripper_spawn:=true tty_port:=/dev/ttyUSB0
 
+# spawn robot and gripper with fake gripper hardware (for testing without real gripper)
+ros2 launch ur_cell_control start_robot.launch.py ur_type:=ur5e use_mock_gripper_hardware:=true  gripper_spawn:=true
+
 # RTDE controller interface for robot
-ros2 launch ur_rtde_interface controller.launch.py robot_ip:=172.25.0.2
+ros2 launch ur_rtde_interface controller.launch.py
 
 ```
 
