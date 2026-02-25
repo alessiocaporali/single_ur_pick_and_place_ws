@@ -20,10 +20,16 @@ def generate_launch_description():
         default_value="left",
         description="Namespace for all robot nodes"
     )
+    gripper_active_arg = DeclareLaunchArgument(
+        "gripper_active",
+        default_value="false",
+        description="Enable gripper control over UR robot socket."
+    )
 
     # LaunchConfigurations
     robot_ip = LaunchConfiguration("robot_ip")
     namespace = LaunchConfiguration("namespace")
+    gripper_active = LaunchConfiguration("gripper_active")
 
     # Robot controller node under same namespace
     robot_controller_node = Node(
@@ -33,8 +39,8 @@ def generate_launch_description():
         output="screen",
         parameters=[
             {"robot_ip": robot_ip},
-            {"gripper_active": False},
-            {"namespace": namespace}
+            {"gripper_active": gripper_active},
+            {"namespace": namespace},
         ],
     )
 
@@ -42,5 +48,6 @@ def generate_launch_description():
     return LaunchDescription([
         robot_ip_arg,
         namespace_arg,
+        gripper_active_arg,
         robot_controller_node,
     ])

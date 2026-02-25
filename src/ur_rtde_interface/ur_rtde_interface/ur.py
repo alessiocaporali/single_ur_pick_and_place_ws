@@ -5,10 +5,11 @@ from rtde_control import RTDEControlInterface
 from rtde_receive import RTDEReceiveInterface
 from pipy.tf import Frame, Vector, Rotation
 
+from ur_rtde_interface.robotiq import GripperControl
 
 class UR:
 
-    def __init__(self, robot_ip, home_joints=None, only_receiver=False, gripper=False):
+    def __init__(self, robot_ip, home_joints=None, only_receiver=False, gripper=True):
         """
         robot_ip: str - IP address of the robot
         camera_tool0_pose: list - [x, y, z, qx, qy, qz, qw] pose of the camera in the tool0 frame
@@ -31,18 +32,18 @@ class UR:
         self.pin_tool0_frame = Frame(Rotation(), Vector(0, 0, 0.2278))
         self.pin_tool0_frame_original = Frame(Rotation(), Vector(0, 0, 0.2278))
 
-        '''
+        
         if gripper:
             self.gripper = GripperControl("Hand_E", robot_ip=robot_ip, port=63352)
             if not self.gripper.initialize():
                 print("Failed to initialize gripper")
                 sys.exit(1)
+
+            self.move_gripper(position=0.02, speed=100, force=100)
             print("Gripper initialized successfully")
         else:
             self.gripper = None
-        '''
-        self.gripper = None
-
+        
     def homing(self):
         self.rtde_c.moveJ(self.home_joints, 0.1, 0.1, False)
 
@@ -129,6 +130,10 @@ class UR:
             return False
 
     def move_gripper(self, position, speed=None, force=None):
+        if self.gripper is None:
+            raise RuntimeError("Gripper backend is not enabled")
+
+        position = float(position)
         if speed is None:
             speed = 50
         if force is None:
@@ -136,10 +141,13 @@ class UR:
 
         self.gripper.go_to(position, speed, force)
 
-        while True:
+        deadline = time.monotonic() + 5.0
+        while time.monotonic() < deadline:
             time.sleep(0.05)
 
             act_pos = self.gripper.gripper.getActualPos()
+            if act_pos < 0:
+                continue
             diff = abs(act_pos - position)
             if diff < 0.001:
                 break

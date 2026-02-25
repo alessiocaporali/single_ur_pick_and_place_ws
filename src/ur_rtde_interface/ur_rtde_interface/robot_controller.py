@@ -98,11 +98,19 @@ class RobotController(Node):
         self.gripper_active = self.get_parameter("gripper_active").value
         self.namespace = self.get_parameter("namespace").value
 
-        self.gripper_range = [0.005, 0.04]
         self.stop_flag = False
 
         # Robot driver
         self.robot = UR(robot_ip, gripper=self.gripper_active)
+        self.gripper_range = [0.0, 0.055]
+        if self.gripper_active and self.robot.gripper is not None:
+            self.gripper_range = [
+                self.robot.gripper.get_min_stroke(),
+                self.robot.gripper.get_max_stroke(),
+            ]
+            self.get_logger().info(
+                f"RTDE gripper stroke range: [{self.gripper_range[0]:.4f}, {self.gripper_range[1]:.4f}] m"
+            )
 
         ns = self.namespace
 
@@ -167,6 +175,9 @@ class RobotController(Node):
 
     def move_gripper_callback(self, req, resp=None):
         if not self.gripper_active:
+            return MoveGripper.Response(success=False)
+        if self.robot.gripper is None:
+            self.get_logger().error("gripper_active is true but UR gripper backend is unavailable")
             return MoveGripper.Response(success=False)
         pos = np.clip(req.position, self.gripper_range[0], self.gripper_range[1])
         self.robot.move_gripper(pos)

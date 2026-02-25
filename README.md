@@ -44,17 +44,17 @@ docker compose -f docker_compose_sim.yml up
 **UR robot state + rtde interface + robotiq gripper:**
 ```bash
 
-# real gripper over USB
-ros2 launch ur_cell_control start_robot.launch.py use_sim_gripper:=false tty_port:=/dev/ttyUSB0
+# no gripper (UR robot only)
+ros2 launch ur_rtde_interface robot.launch.py gripper_mode:=false
 
-# real gripper over URCaps interface (#TODO: check)
-ros2 launch ur_cell_control start_robot.launch.py use_sim_gripper:=false tty_port:=/tmp/ttyUR use_tool_communication:=true
+# real gripper over USB Modbus
+ros2 launch ur_rtde_interface robot.launch.py gripper_mode:=modbus tty_port:=/dev/ttyUSB0
 
-# fake gripper (for simulation)
-ros2 launch ur_cell_control start_robot.launch.py use_sim_gripper:=true
+# gripper over UR RTDE socket service (model in RViz, no gripper controller spawn, no Modbus connection)
+ros2 launch ur_rtde_interface robot.launch.py gripper_mode:=rtde
 
-# only robot without gripper
-ros2 launch ur_cell_control start_robot.launch.py gripper_spawn:=false
+# fake gripper (simulation)
+ros2 launch ur_rtde_interface robot.launch.py gripper_mode:=simulation
 
 ```
 
@@ -70,6 +70,12 @@ the `gripper_action_controller` parameters are loaded from:
 
 ```bash
 src/ur_cell/ur_cell_control/config/ros2_controllers.yaml
+```
+
+To expose the RTDE gripper service (`/<namespace>/move_gripper`) through the UR robot socket, enable:
+
+```bash
+ros2 launch ur_rtde_interface robot.launch.py gripper_mode:=rtde
 ```
 
 Launch only the gripper:

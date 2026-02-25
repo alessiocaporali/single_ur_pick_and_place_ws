@@ -213,7 +213,7 @@ def generate_launch_description():
                             ]
                         ),
                         launch_arguments={
-                            "enabled": gripper_spawn,
+                            "enabled": launch_gripper_controller,
                             "controller_name": "gripper_action_controller",
                             "controller_manager": "/controller_manager",
                             "controller_spawner_timeout": "30",
